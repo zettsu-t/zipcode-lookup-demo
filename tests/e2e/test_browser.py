@@ -29,8 +29,8 @@ class TestScreenshots:
     def test_s1_sender_after_save(self, page: Page):
         """S-1: 差出人登録後"""
         page.goto(f"{BASE}/sender/")
-        page.locator("#id_zipcode").fill("231-0045")
-        page.locator("#id_address").fill("神奈川県横浜市中区伊勢佐木町")
+        page.locator("#id_zipcode").fill("231-0017")
+        page.locator("#id_address").fill("神奈川県横浜市中区")
         # names フィールドはテキストエリア
         page.locator("textarea").fill("山田 太郎\n山田 花子")
         page.locator("button[type=submit]").click()
@@ -89,7 +89,7 @@ class TestZipcodeAutoComplete:
         address_input = page.locator("#id_address")
 
         address_input.fill("")  # アドレス欄をクリア
-        zipcode_input.fill("2310045")
+        zipcode_input.fill("2310017")
         zipcode_input.press("Enter")
 
         expect(address_input).not_to_have_value("", timeout=5000)
@@ -118,7 +118,7 @@ class TestZipcodeAutoComplete:
         zipcode_input = page.locator("#id_zipcode")
         address_input = page.locator("#id_address")
 
-        zipcode_input.fill("2310045")
+        zipcode_input.fill("2310017")
         zipcode_input.press("Enter")
 
         expect(address_input).not_to_have_value("", timeout=5000)
@@ -139,7 +139,7 @@ class TestZipcodeAutoComplete:
         zipcode_input = page.locator("#id_zipcode")
         address_input = page.locator("#id_address")
         address_input.fill("")
-        zipcode_input.fill("2310045")
+        zipcode_input.fill("2310017")
         zipcode_input.press("Enter")
 
         expect(address_input).not_to_have_value("", timeout=5000)
@@ -154,7 +154,7 @@ class TestZipcodeAutoComplete:
         address_input = page.locator("#id_address")
 
         address_input.fill("")
-        zipcode_input.fill("2310045")
+        zipcode_input.fill("2310017")
         zipcode_input.press("Enter")
 
         expect(address_input).not_to_have_value("", timeout=5000)

@@ -12,10 +12,25 @@ CSV列（0-indexed）:
 
 import csv
 import os
+import sqlite3
 import sys
 
 # {zipcode_with_hyphen: address_string}
 _index: dict[str, str] = {}
+
+# 逆引き用インメモリSQLite
+_rev_conn: sqlite3.Connection | None = None
+
+
+def _like_pattern(query: str) -> str:
+    """ユーザクエリをSQLite LIKEパターンに変換する。LIKE特殊文字をエスケープし、*を%に変換する。"""
+    escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    if "*" in escaped:
+        inner = escaped.replace("*", "%")
+        prefix = "" if inner.startswith("%") else "%"
+        suffix = "" if inner.endswith("%") else "%"
+        return f"{prefix}{inner}{suffix}"
+    return f"%{escaped}%"
 
 
 def _to_hyphen(digits: str) -> str:
@@ -23,7 +38,7 @@ def _to_hyphen(digits: str) -> str:
 
 
 def load(data_dir: str) -> None:
-    global _index
+    global _index, _rev_conn
     path = os.path.join(data_dir, "utf_ken_all.csv")
     if not os.path.exists(path):
         print(
@@ -73,6 +88,14 @@ def load(data_dir: str) -> None:
         index[pending_zip] = "".join(pending_parts)
 
     _index = index
+
+    # 逆引き用インデックスを構築
+    conn = sqlite3.connect(":memory:", check_same_thread=False)
+    conn.execute("CREATE TABLE ken_all (zipcode TEXT NOT NULL, address TEXT NOT NULL)")
+    conn.executemany("INSERT INTO ken_all VALUES (?, ?)", index.items())
+    conn.commit()
+    _rev_conn = conn
+
     print(f"ken_all loaded: {len(_index)} entries from {path}")
 
 
@@ -82,3 +105,14 @@ def lookup(zipcode: str) -> dict | None:
     if address is None:
         return None
     return {"zipcode": zipcode, "address": address}
+
+
+def search(query: str, limit: int = 101) -> list[dict]:
+    """住所の部分一致検索。ワイルドカード * 使用可。"""
+    if _rev_conn is None:
+        return []
+    cur = _rev_conn.execute(
+        "SELECT zipcode, address FROM ken_all WHERE address LIKE ? ESCAPE '\\' LIMIT ?",
+        (_like_pattern(query), limit),
+    )
+    return [{"zipcode": row[0], "address": row[1], "type": "general"} for row in cur]

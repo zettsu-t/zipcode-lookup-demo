@@ -96,3 +96,19 @@ class ZipLookupView(View):
             return JsonResponse(resp.json(), status=resp.status_code)
         except requests.RequestException as e:
             return JsonResponse({"detail": f"バックエンドに接続できません: {e}"}, status=503)
+
+
+class AddressLookupView(View):
+    """住所→郵便番号をFastAPIにプロキシする"""
+
+    def get(self, request):
+        q = request.GET.get("q", "")
+        try:
+            resp = requests.get(
+                f"{settings.BACKEND_URL}/api/v2/address",
+                params={"q": q},
+                timeout=5,
+            )
+            return JsonResponse(resp.json(), status=resp.status_code, safe=False)
+        except requests.RequestException as e:
+            return JsonResponse({"detail": f"バックエンドに接続できません: {e}"}, status=503)

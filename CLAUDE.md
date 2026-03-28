@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `frontend/` : Django。画面・モデル・フォーム。DBはSQLite。
 - `backend/`  : FastAPI。郵便番号検索APIのみ。DBなし。
-- `backend/data/` : CSVファイル置き場。Gitに含めない。
+- `data/`     : CSVファイル置き場。Gitに含めない。
 
 DjangoからFastAPIへの通信はHTTP GETのみ。
 Djangoはバックエンドの実装詳細（インデックス構造・CSVフォーマット・検索アルゴリズム）を知ってはならない。
@@ -75,7 +75,7 @@ Djangoはバックエンドの実装詳細（インデックス構造・CSVフ�
 - 列（0-indexed）：2=事業所名(漢字), 3=都道府県, 4=市区町村, 5=町域, 7=郵便番号
 - 検索キー = 列2（事業所名）
 
-CSVは `backend/data/` に手動配置する。起動時にCSVが存在しない場合はエラーで終了する（サイレントに無効化しない）。
+CSVは `data/` に手動配置する。起動時にCSVが存在しない場合はエラーで終了する（サイレントに無効化しない）。
 
 ---
 

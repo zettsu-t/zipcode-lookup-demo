@@ -49,12 +49,13 @@ repo/
 │   ├── routers/
 │   │   ├── zipcode.py   # GET /api/v1/zip?code=   順引き（stage 1）
 │   │   └── address.py   # GET /api/v2/address?q=  逆引き（stage 2）
-│   ├── services/
-│   │   ├── ken_all.py   # ken_all.csv 読み込み・インデックス構築
-│   │   └── jigyosyo.py  # JIGYOSYO.CSV 読み込み・インデックス構築
-│   └── data/            # CSVファイル置き場（.gitignoreで除外）
-│       ├── ken_all.csv
-│       └── JIGYOSYO.CSV
+│   └── services/
+│       ├── ken_all.py   # ken_all.csv 読み込み・インデックス構築
+│       └── jigyosyo.py  # JIGYOSYO.CSV 読み込み・インデックス構築
+│
+├── data/              # CSVファイル置き場（.gitignoreで除外）
+│   ├── ken_all.csv
+│   └── JIGYOSYO.CSV
 │
 └── docker-compose.yml
 ```
@@ -163,7 +164,7 @@ make dev-down      # 停止
 - Django: `http://localhost:8000`
 - FastAPI: `http://localhost:8001`
 
-FastAPI 起動時に `backend/data/` 以下のCSVを読み込んでインデックスを構築する。CSVが存在しない場合は起動エラーとする（サイレントに無効化しない）。
+FastAPI 起動時に `data/` 以下のCSVを読み込んでインデックスを構築する。CSVが存在しない場合は起動エラーとする（サイレントに無効化しない）。
 
 ---
 
@@ -184,6 +185,7 @@ repo/
 ├── pyproject.toml             # uv + 依存パッケージ定義
 ├── docker-compose.yml         # architecture.mdのセクション13から生成
 ├── .spectral.yaml             # openapi_spec.yamlのLint設定
+├── .env.example               # 環境変数のテンプレート（BACKEND_URL等）
 │
 ├── * docs/
 │   ├── * requirements.md
@@ -219,9 +221,6 @@ repo/
 │   ├── services/
 │   │   ├── ken_all.py         # ken_all.csv 読み込み・インデックス構築
 │   │   └── jigyosyo.py        # JIGYOSYO.CSV 読み込み・インデックス構築
-│   ├── data/                  # CSVファイル置き場（.gitignoreで除外）
-│   │   ├── ken_all.csv        # 別途ダウンロード
-│   │   └── JIGYOSYO.CSV       # 別途ダウンロード
 │   └── tests/
 │       ├── unit/
 │       └── integration/
@@ -229,9 +228,13 @@ repo/
 ├── tests/
 │   └── e2e/                   # Playwright E2Eテスト
 │
+├── data/                      # CSVファイル置き場（.gitignoreで除外）
+│   ├── ken_all.csv            # 別途ダウンロード
+│   └── JIGYOSYO.CSV           # 別途ダウンロード
+│
 └── .github/
     └── workflows/
-        └── ci.yml             # GitHub Actions CI
+        └── ci.yml             # make ci を自動実行
 ```
 
 ---
@@ -241,7 +244,7 @@ repo/
 - DjangoとFastAPIを1プロセスに統合する
 - FastAPIにDBを持たせる（PostgreSQL等）
 - 認証・セッション管理
-- CSVのホスティング・自動ダウンロード（手動で `data/` に配置する）
+- CSVのホスティング・自動ダウンロード（手動で `backend/data/` に配置する）
 
 ---
 
@@ -376,7 +379,7 @@ make test-all       # ユニット + インテグレーション + E2E
 
 ```
 make test-spec の動作:
-  1. data/utf_ken_all.csv の存在を確認（なければエラーメッセージで終了）
+  1. backend/data/utf_ken_all.csv の存在を確認（なければエラーメッセージで終了）
   2. バックエンドをポート 8001 で起動（既に起動中なら再利用）
   3. schemathesis run docs/openapi_spec.yaml --checks all を実行
   4. 終了時（正常・エラー・Ctrl+C 問わず）バックエンドを停止
@@ -472,20 +475,20 @@ services:
     build: ./backend
     ports: ["8001:8001"]
     volumes:
-      - ./data:/app/data:ro   # CSVをread-onlyでマウント
+      - ./backend/data:/app/data:ro   # CSVをread-onlyでマウント
 ```
 
 ### CSVの配置（手動）
 
 ```bash
 # docker compose up の前に実施する
-mkdir -p backend/data/
-cp /path/to/ken_all.csv backend/data/
-cp /path/to/JIGYOSYO.CSV backend/data/
+mkdir -p data/
+cp /path/to/ken_all.csv data/
+cp /path/to/JIGYOSYO.CSV data/
 docker compose up
 ```
 
-CSVは `backend/data/` ディレクトリにマウントされ、FastAPIが起動時に読み込む。CSVが存在しない場合、FastAPIは起動エラーで終了する（サイレントに無効化しない）。
+CSVは `data/` ディレクトリにマウントされ、FastAPIが起動時に読み込む。CSVが存在しない場合、FastAPIは起動エラーで終了する（サイレントに無効化しない）。
 
 ### 完了条件
 

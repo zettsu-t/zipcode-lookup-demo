@@ -1,7 +1,7 @@
 .PHONY: install install-hooks install-playwright format lint \
         test test-e2e test-e2e-http test-e2e-browser test-spec test-all schema \
         audit audit-code audit-deps \
-        up down build dev dev-backend dev-frontend dev-down dev-migrate reset-db
+        up down build dev dev-backend dev-frontend dev-down dev-migrate
 
 VENV   = .venv
 PY     = $(CURDIR)/$(VENV)/bin/python
@@ -28,7 +28,6 @@ format:
 
 lint:
 	$(RUFF) check backend/ frontend/
-	$(PY) -m mypy backend/
 
 # ── テスト ────────────────────────────────────────────────────
 
@@ -81,10 +80,6 @@ build:
 	docker compose build
 
 # ── ローカル開発（Docker不使用） ──────────────────────────────
-
-reset-db:
-	rm -f frontend/db.sqlite3
-	cd frontend && $(PY) manage.py migrate
 
 dev-migrate:
 	cd frontend && $(PY) manage.py migrate

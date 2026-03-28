@@ -38,13 +38,13 @@ def get_zip(
         ...,
         pattern=r"^[0-9]{7}$|^[0-9]{3}-[0-9]{4}$",
         description="郵便番号。ハイフンあり（NNN-NNNN）またはなし（NNNNNNN）",
-        examples=["2310045", "231-0045"],
+        examples=["2310017", "231-0017"],
     ),
-) -> ZipcodeResult | JSONResponse:
+) -> ZipcodeResult:
     normalized = normalize(code)
     if normalized is None:
         return JSONResponse(status_code=400, content={"detail": "invalid zipcode format"})
     result = ken_all.lookup(normalized)
     if result is None:
         return JSONResponse(status_code=404, content={"detail": "zipcode not found"})
-    return ZipcodeResult(**result)
+    return result

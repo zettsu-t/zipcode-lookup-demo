@@ -8,4 +8,5 @@ urlpatterns = [
     path("guests/<int:pk>/edit/", views.GuestUpdateView.as_view(), name="guest_update"),
     path("guests/<int:pk>/delete/", views.GuestDeleteView.as_view(), name="guest_delete"),
     path("zip/lookup/", views.ZipLookupView.as_view(), name="zip_lookup"),
+    path("address/lookup/", views.AddressLookupView.as_view(), name="address_lookup"),
 ]

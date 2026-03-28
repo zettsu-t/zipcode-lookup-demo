@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: はがき配布サービス バックエンドAPI
-  version: '1.0'
+  version: '2.1'
 paths:
   /api/v1/zip:
     get:
@@ -16,8 +16,8 @@ paths:
           pattern: ^[0-9]{7}$|^[0-9]{3}-[0-9]{4}$
           description: 郵便番号。ハイフンあり（NNN-NNNN）またはなし（NNNNNNN）
           examples:
-          - '2310045'
-          - 231-0045
+          - '2310017'
+          - 231-0017
           title: Code
         description: 郵便番号。ハイフンあり（NNN-NNNN）またはなし（NNNNNNN）
       responses:
@@ -45,8 +45,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v2/address:
+    get:
+      summary: 住所→郵便番号の逆引き
+      operationId: get_address_api_v2_address_get
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          description: 検索クエリ。2文字以上。ワイルドカード * 使用可
+          title: Q
+        description: 検索クエリ。2文字以上。ワイルドカード * 使用可
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AddressResult'
+                title: Response Get Address Api V2 Address Get
+        '400':
+          description: クエリが短すぎる
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
+    AddressResult:
+      properties:
+        zipcode:
+          type: string
+          title: Zipcode
+        address:
+          type: string
+          title: Address
+        type:
+          type: string
+          title: Type
+      type: object
+      required:
+      - zipcode
+      - address
+      - type
+      title: AddressResult
     ErrorDetail:
       properties:
         detail:

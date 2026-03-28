@@ -14,7 +14,7 @@ services:
       - "8000:8000"
     environment:
       BACKEND_URL: http://backend:8001
-      SECRET_KEY: docker-secret-key  # ⚠ デモ・ローカル専用。本番環境では必ず強力なランダム文字列に変更すること。
+      SECRET_KEY: docker-secret-key
       DEBUG: "false"
     depends_on:
       - backend

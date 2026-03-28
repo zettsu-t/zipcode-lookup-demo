@@ -35,8 +35,9 @@ def test_valid_zipcode_without_hyphen(client):
 
 
 def test_invalid_format(client):
+    # FastAPIのQueryパターンバリデーションは422を返す。
+    # 実装でパターン検証を通過した後に手動で400を返すケースもあるため両方を許容する。
     resp = client.get("/api/v1/zip?code=abc")
-    # FastAPIのQueryバリデーションが先に動くと422、ハンドラ内チェックなら400
     assert resp.status_code in (400, 422)
 
 

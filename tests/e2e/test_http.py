@@ -52,8 +52,8 @@ class TestSender:
             "/sender/",
             {
                 "names": "山田 太郎\n山田 花子",
-                "zipcode": "231-0045",
-                "address": "神奈川県横浜市中区伊勢佐木町",
+                "zipcode": "231-0017",
+                "address": "神奈川県横浜市中区",
             },
         )
         assert resp.status_code == 302
@@ -68,8 +68,8 @@ class TestSender:
             "/sender/",
             {
                 "names": "",
-                "zipcode": "231-0045",
-                "address": "神奈川県横浜市中区伊勢佐木町",
+                "zipcode": "231-0017",
+                "address": "神奈川県横浜市中区",
             },
         )
         # バリデーションエラーのため 200 でフォームを再表示
@@ -120,8 +120,8 @@ class TestGuests:
             f"/guests/{pk}/edit/",
             {
                 "names": self.GUEST_NAME,
-                "zipcode": "231-0045",
-                "address": "神奈川県横浜市中区伊勢佐木町",
+                "zipcode": "231-0017",
+                "address": "神奈川県横浜市中区",
             },
         )
         assert resp.status_code == 302
@@ -129,7 +129,7 @@ class TestGuests:
 
     def test_edited_data_appears_in_list(self):
         resp = requests.get(f"{BASE}/guests/")
-        assert "231-0045" in resp.text
+        assert "231-0017" in resp.text
 
     def test_delete_confirm_returns_200(self):
         pk = _find_guest_pk(self.GUEST_NAME)
@@ -167,14 +167,14 @@ def _find_guest_pk(name: str) -> str:
 
 class TestZipLookupProxy:
     def test_valid_7digit_zip(self):
-        resp = requests.get(f"{BASE}/zip/lookup/", params={"code": "2310045"})
+        resp = requests.get(f"{BASE}/zip/lookup/", params={"code": "2310017"})
         assert resp.status_code == 200
         data = resp.json()
         assert "address" in data
         assert "神奈川" in data["address"]
 
     def test_valid_hyphen_zip(self):
-        resp = requests.get(f"{BASE}/zip/lookup/", params={"code": "231-0045"})
+        resp = requests.get(f"{BASE}/zip/lookup/", params={"code": "231-0017"})
         assert resp.status_code == 200
         data = resp.json()
         assert "神奈川" in data["address"]
@@ -186,3 +186,39 @@ class TestZipLookupProxy:
     def test_invalid_format_returns_error(self):
         resp = requests.get(f"{BASE}/zip/lookup/", params={"code": "invalid"})
         assert resp.status_code in (400, 422)
+
+
+# ── 住所逆引きプロキシ ────────────────────────────────────────────────────────
+
+
+class TestAddressLookupProxy:
+    def test_valid_query_returns_list(self):
+        # 「横浜市中区」は107件あり上限超過で[]になるため、より絞り込んだクエリを使う
+        resp = requests.get(f"{BASE}/address/lookup/", params={"q": "伊勢佐木町"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert isinstance(data, list)
+        assert len(data) > 0
+
+    def test_result_has_required_fields(self):
+        resp = requests.get(f"{BASE}/address/lookup/", params={"q": "伊勢佐木町"})
+        assert resp.status_code == 200
+        for item in resp.json():
+            assert "zipcode" in item
+            assert "address" in item
+            assert "type" in item
+
+    def test_jigyosho_query(self):
+        resp = requests.get(f"{BASE}/address/lookup/", params={"q": "神奈川県庁"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert any(r["zipcode"] == "231-8588" for r in data)
+
+    def test_short_query_returns_400(self):
+        resp = requests.get(f"{BASE}/address/lookup/", params={"q": "東"})
+        assert resp.status_code == 400
+
+    def test_wildcard_query(self):
+        resp = requests.get(f"{BASE}/address/lookup/", params={"q": "伊勢*町"})
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)

@@ -19,21 +19,23 @@
           {% if field.name == "zipcode" %}
             <input
               type="text"
-              id="id_zipcode"
+              id="{{ field.id_for_label }}"
               name="{{ field.html_name }}"
               value="{{ field.value|default:'' }}"
               class="form-control{% if field.errors %} is-invalid{% endif %}"
               placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
               maxlength="{{ field.field.widget.attrs.maxlength|default:'' }}"
+              id="id_zipcode"
             >
           {% elif field.name == "address" %}
             <input
               type="text"
-              id="id_address"
+              id="{{ field.id_for_label }}"
               name="{{ field.html_name }}"
               value="{{ field.value|default:'' }}"
               class="form-control{% if field.errors %} is-invalid{% endif %}"
               placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
+              id="id_address"
             >
           {% else %}
             {{ field }}

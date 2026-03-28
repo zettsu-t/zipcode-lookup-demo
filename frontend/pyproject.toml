@@ -15,5 +15,4 @@ include = ["app*", "config*"]
 dev = [
     "pytest>=8",
     "pytest-django>=4.9",
-    "pytest-cov>=6",
 ]

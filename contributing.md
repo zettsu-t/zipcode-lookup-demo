@@ -1,3 +1,4 @@
+# contributing.md
 # はがき配布サービス — 開発規約
 
 ---
@@ -6,8 +7,8 @@
 
 | 対象 | 言語・バージョン |
 |------|----------------|
-| フロントエンド | Python 3.11+ / Django 5.x |
-| バックエンド | Python 3.11+ / FastAPI 0.115+ |
+| フロントエンド | Python 3.12 / Django 5.x |
+| バックエンド | Python 3.12 / FastAPI 0.11x |
 | テスト | pytest / Playwright |
 | コンテナ | Docker / docker compose |
 
@@ -28,9 +29,10 @@
 - テスト関数：日本語可（例：`def test_京橋は複数都道府県ヒットする():`）
 
 ### テスト
-- ユニットテストは `tests/unit/` に置く。外部依存なしで動くこと（フィクスチャCSVを使う）
+- テストファイルは実装ファイルと同じディレクトリに置く
+- ユニットテストは外部依存なしで動くこと（フィクスチャCSVを使う）
 - インテグレーションテストは `tests/integration/` に置く
-- E2Eテストは `tests/e2e/` に置く（プロジェクトルート直下）
+- E2Eテストは `tests/e2e/` に置く
 
 ---
 
@@ -63,20 +65,21 @@ chore: .gitignoreにCSVを追加
 
 ```
 frontend/
+  app/
+    tests/          ユニットテスト（Django）
   tests/
-    unit/           ユニットテスト（Django）
     integration/    インテグレーションテスト（Django）
 
 backend/
   routers/          エンドポイント定義
   services/         CSVロード・インデックス構築
-  tests/
-    unit/           ユニットテスト（FastAPI）
-    integration/    インテグレーションテスト（FastAPI）
-  data/             CSVファイル置き場（Gitに含めない）
+  tests/            ユニットテスト（FastAPI）
+  tests/integration/  インテグレーションテスト（FastAPI）
 
 tests/
   e2e/              E2Eテスト（Playwright）
+
+data/               CSVファイル置き場（Gitに含めない）
 ```
 
 ---
@@ -85,13 +88,10 @@ tests/
 
 ```bash
 make install     # 依存パッケージのインストール
-make format      # コード整形（ruff）
-make lint        # 静的解析（ruff + mypy）
+make lint        # ruff + mypy
 make test        # ユニット + インテグレーション
 make test-e2e    # E2E（docker compose up が前提）
 make test-all    # 全テスト
-make schema      # OpenAPIスキーマ再生成
-make audit       # セキュリティ監査（bandit + pip-audit）
 make up          # docker compose up
 make down        # docker compose down
 ```

@@ -12,7 +12,6 @@ backend/data/*
 !backend/data/.gitkeep
 *.db
 db.sqlite3
-.coverage
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/

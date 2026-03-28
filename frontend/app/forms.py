@@ -29,7 +29,7 @@ class SenderForm(forms.ModelForm):
         model = Sender
         fields = ["names", "zipcode", "address"]
         widgets = {
-            "zipcode": forms.TextInput(attrs={"placeholder": "例: 231-0045", "maxlength": "8"}),
+            "zipcode": forms.TextInput(attrs={"placeholder": "例: 231-0017", "maxlength": "8"}),
             "address": forms.TextInput(
                 attrs={"placeholder": "郵便番号を入力すると自動補完されます"}
             ),
@@ -47,7 +47,7 @@ class GuestForm(forms.ModelForm):
         model = Guest
         fields = ["names", "zipcode", "address"]
         widgets = {
-            "zipcode": forms.TextInput(attrs={"placeholder": "例: 231-0045", "maxlength": "8"}),
+            "zipcode": forms.TextInput(attrs={"placeholder": "例: 231-0017", "maxlength": "8"}),
             "address": forms.TextInput(attrs={"placeholder": "住所"}),
         }
         labels = {

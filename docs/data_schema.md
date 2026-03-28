@@ -10,7 +10,7 @@
 |-----------|-----|------|------|
 | id | integer | PK, auto | |
 | names | JSONField | NOT NULL | 連名リスト。例：`["山田 太郎", "山田 花子"]`。件数制限なし。 |
-| zipcode | varchar(8) | NOT NULL | ハイフンあり形式で保存（例：`231-0045`） |
+| zipcode | varchar(8) | NOT NULL | ハイフンあり形式で保存（例：`231-0017`） |
 | address | varchar(400) | NOT NULL | 郵便番号補完後も手動編集可能 |
 | created_at | datetime | NOT NULL | |
 | updated_at | datetime | NOT NULL | |
