@@ -1,0 +1,84 @@
+{% extends "app/base.html" %}
+
+{% block title %}出席者{{ action }} | 返礼はがき送付サービス{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">出席者{{ action }}</h2>
+
+<div class="card">
+  <div class="card-body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+          {% if field.name == "zipcode" %}
+            <input
+              type="text"
+              id="id_zipcode"
+              name="{{ field.html_name }}"
+              value="{{ field.value|default:'' }}"
+              class="form-control{% if field.errors %} is-invalid{% endif %}"
+              placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
+              maxlength="{{ field.field.widget.attrs.maxlength|default:'' }}"
+            >
+          {% elif field.name == "address" %}
+            <input
+              type="text"
+              id="id_address"
+              name="{{ field.html_name }}"
+              value="{{ field.value|default:'' }}"
+              class="form-control{% if field.errors %} is-invalid{% endif %}"
+              placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}"
+            >
+          {% else %}
+            <div class="{% if field.errors %}is-invalid{% endif %}">
+              {{ field }}
+            </div>
+          {% endif %}
+          {% for error in field.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary">{{ action }}</button>
+      <a href="{% url 'guest_list' %}" class="btn btn-secondary ms-2">キャンセル</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const zipcodeInput = document.getElementById('id_zipcode');
+  const addressInput = document.getElementById('id_address');
+
+  if (zipcodeInput && addressInput) {
+    async function lookupZip() {
+      const code = zipcodeInput.value.trim();
+      if (!code) return;
+      try {
+        const resp = await fetch(`/zip/lookup/?code=${encodeURIComponent(code)}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.address) {
+            addressInput.value = data.address;
+          }
+        }
+      } catch (e) {
+        console.warn('郵便番号検索に失敗しました:', e);
+      }
+    }
+
+    zipcodeInput.addEventListener('blur', lookupZip);
+
+    zipcodeInput.addEventListener('keydown', async function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      e.stopPropagation();
+      await lookupZip();
+      if (addressInput.value) addressInput.focus();
+    });
+  }
+</script>
+{% endblock %}

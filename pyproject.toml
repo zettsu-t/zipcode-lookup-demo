@@ -1,0 +1,35 @@
+[tool.uv.workspace]
+members = ["backend", "frontend"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests", "frontend/tests"]
+asyncio_mode = "strict"
+addopts = "--cov --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["backend", "frontend/app"]
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    "frontend/app/admin.py",
+    "frontend/app/urls.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.bandit]
+# テストコードの assert 文を誤検知しないよう除外する
+exclude_dirs = ["backend/tests", "frontend/tests", "tests"]
+
+[tool.mypy]
+ignore_missing_imports = true
+# フロントエンド（Django）は django-stubs の型注釈に相当な boilerplate が必要なため対象外
+exclude = ["^frontend/", "^backend/tests/"]

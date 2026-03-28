@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  # ── Lint ────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (ruff + mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Verify lock file is up-to-date
+        run: uv lock --locked
+
+      - name: Install dependencies
+        run: uv venv && uv pip install ruff -e "backend[dev]"
+
+      - name: Check formatting
+        run: .venv/bin/ruff format --check backend/ frontend/
+
+      - name: Check linting
+        run: .venv/bin/ruff check backend/ frontend/
+
+      - name: Type check (mypy)
+        run: .venv/bin/mypy backend/
+
+  # ── Unit / Integration Tests ────────────────────────────────────────────
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv venv && uv pip install -e "backend[dev]" -e "frontend[dev]"
+
+      - name: Run pytest
+        run: .venv/bin/pytest -v
+        # 実CSVがないため backend/tests/integration/ は自動 skip される。
+        # 単体テスト（ken_all, forms）は CSV 不要なので常に実行される。
+
+  # ── Security Audit ──────────────────────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv venv && uv pip install -e "backend[dev]" -e "frontend[dev]" bandit pip-audit
+
+      - name: bandit (static analysis)
+        run: .venv/bin/bandit -r backend/ frontend/ -c pyproject.toml
+
+      - name: pip-audit (dependency vulnerabilities)
+        run: |
+          # --skip-editable: ローカルパッケージ(backend/frontend)はPyPI未公開のためスキップ
+          # --ignore-vuln CVE-2026-4539: pygments の未修正CVE。schemathesis経由の開発依存のみ、本番不使用。
+          #   修正版リリース後に削除すること。
+          .venv/bin/pip-audit --skip-editable --ignore-vuln CVE-2026-4539
+
+  # ── OpenAPI spec の鮮度チェック ──────────────────────────────────────────
+  schema:
+    name: OpenAPI spec (up-to-date)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv venv && uv pip install -e "backend[dev]"
+        # backend[dev] に pyyaml が含まれる
+
+      - name: Regenerate schema and compare
+        run: |
+          .venv/bin/python scripts/export_openapi.py > /tmp/generated.yaml
+          if ! diff -u docs/openapi_spec.yaml /tmp/generated.yaml; then
+            echo "OpenAPI spec が古くなっています。make schema を実行してコミットしてください。"
+            exit 1
+          fi

@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+.env
+/data/
+/external_data/
+backend/data/*
+!backend/data/.gitkeep
+*.db
+db.sqlite3
+.coverage
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.backend.pid
+.frontend.pid
+tests/e2e/screenshots/
+
+# Emacs一時ファイル
+*~
+\#*\#
+.\#*

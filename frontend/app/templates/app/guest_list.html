@@ -1,0 +1,40 @@
+{% extends "app/base.html" %}
+
+{% block title %}出席者リスト | 返礼はがき送付サービス{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>出席者リスト</h2>
+  <a href="{% url 'guest_create' %}" class="btn btn-primary">出席者を追加</a>
+</div>
+
+{% if guests %}
+  <table class="table table-striped table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>#</th>
+        <th>氏名</th>
+        <th>郵便番号</th>
+        <th>住所</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for guest in guests %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ guest.names|join:" / " }}</td>
+          <td>{{ guest.zipcode|default:"-" }}</td>
+          <td>{{ guest.address|default:"-" }}</td>
+          <td>
+            <a href="{% url 'guest_update' guest.pk %}" class="btn btn-sm btn-outline-secondary">編集</a>
+            <a href="{% url 'guest_delete' guest.pk %}" class="btn btn-sm btn-outline-danger">削除</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="alert alert-info">出席者が登録されていません。「出席者を追加」ボタンから追加してください。</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "app/base.html" %}
+
+{% block title %}出席者削除確認 | 返礼はがき送付サービス{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">出席者削除確認</h2>
+
+<div class="card border-danger">
+  <div class="card-body">
+    <p class="card-text fs-5">
+      以下の出席者を本当に削除しますか？
+    </p>
+    <ul class="list-group list-group-flush mb-3">
+      <li class="list-group-item"><strong>氏名:</strong> {{ guest.names|join:" / " }}</li>
+      <li class="list-group-item"><strong>郵便番号:</strong> {{ guest.zipcode|default:"-" }}</li>
+      <li class="list-group-item"><strong>住所:</strong> {{ guest.address|default:"-" }}</li>
+    </ul>
+    <p class="text-danger fw-bold">この操作は取り消せません。</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">削除する</button>
+      <a href="{% url 'guest_list' %}" class="btn btn-secondary ms-2">キャンセル</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

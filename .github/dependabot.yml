@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Python パッケージ（backend）
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: weekly
+
+  # Python パッケージ（frontend）
+  - package-ecosystem: uv
+    directory: /frontend
+    schedule:
+      interval: weekly
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
