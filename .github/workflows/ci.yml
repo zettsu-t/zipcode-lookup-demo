@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [support/v1.x]
   pull_request:
 
 jobs:
@@ -62,9 +62,7 @@ jobs:
       - name: pip-audit (dependency vulnerabilities)
         run: |
           # --skip-editable: ローカルパッケージ(backend/frontend)はPyPI未公開のためスキップ
-          # --ignore-vuln CVE-2026-4539: pygments の未修正CVE。schemathesis経由の開発依存のみ、本番不使用。
-          #   修正版リリース後に削除すること。
-          .venv/bin/pip-audit --skip-editable --ignore-vuln CVE-2026-4539
+          .venv/bin/pip-audit --skip-editable
 
   # ── OpenAPI spec の鮮度チェック ──────────────────────────────────────────
   schema:

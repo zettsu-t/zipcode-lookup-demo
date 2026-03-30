@@ -11,7 +11,7 @@
     ↓ HTTP GET
 [FastAPI バックエンド]
     ↓ 読み込み済みインデックス
-[ken_all.csv / JIGYOSYO.CSV]
+[ken_all.csv]
 ```
 
 ### なぜ分けるか
@@ -47,14 +47,11 @@ repo/
 ├── backend/           # FastAPI
 │   ├── main.py
 │   ├── routers/
-│   │   ├── zipcode.py   # GET /api/v1/zip?code=   順引き（stage 1）
-│   │   └── address.py   # GET /api/v2/address?q=  逆引き（stage 2）
+│   │   └── zipcode.py   # GET /api/v1/zip?code=   順引き（stage 1）
 │   ├── services/
-│   │   ├── ken_all.py   # ken_all.csv 読み込み・インデックス構築
-│   │   └── jigyosyo.py  # JIGYOSYO.CSV 読み込み・インデックス構築
+│   │   └── ken_all.py   # ken_all.csv 読み込み・インデックス構築
 │   └── data/            # CSVファイル置き場（.gitignoreで除外）
-│       ├── ken_all.csv
-│       └── JIGYOSYO.CSV
+│       └── ken_all.csv
 │
 └── docker-compose.yml
 ```
@@ -87,9 +84,8 @@ conn = sqlite3.connect(":memory:", check_same_thread=False)
 | エンドポイント | メソッド | stage | 説明 |
 |--------------|---------|-------|------|
 | `/api/v1/zip` | GET | 1 | 郵便番号→住所の順引き |
-| `/api/v2/address` | GET | 2 | 住所→郵便番号の逆引き |
 
-バージョニング方針：URLパスにバージョンを含める（`/api/v1/`, `/api/v2/`）。既存エンドポイントは変更しない。stage 2の追加は`/api/v2/`として新設する。
+バージョニング方針：URLパスにバージョンを含める（`/api/v1/`）。既存エンドポイントは変更しない。
 
 ---
 
@@ -214,14 +210,11 @@ repo/
 │   ├── pyproject.toml
 │   ├── main.py
 │   ├── routers/
-│   │   ├── zipcode.py         # GET /api/v1/zip    順引き（stage 1）
-│   │   └── address.py         # GET /api/v2/address 逆引き（stage 2）
+│   │   └── zipcode.py         # GET /api/v1/zip    順引き（stage 1）
 │   ├── services/
-│   │   ├── ken_all.py         # ken_all.csv 読み込み・インデックス構築
-│   │   └── jigyosyo.py        # JIGYOSYO.CSV 読み込み・インデックス構築
+│   │   └── ken_all.py         # ken_all.csv 読み込み・インデックス構築
 │   ├── data/                  # CSVファイル置き場（.gitignoreで除外）
-│   │   ├── ken_all.csv        # 別途ダウンロード
-│   │   └── JIGYOSYO.CSV       # 別途ダウンロード
+│   │   └── ken_all.csv        # 別途ダウンロード
 │   └── tests/
 │       ├── unit/
 │       └── integration/
@@ -300,18 +293,17 @@ pre-commit hook が `backend/` の変更を検出すると自動で再生成・�
 
 ---
 
-### テスト戦略（全 stage）
+### テスト戦略（stage 1）
 
-テストはアーキテクチャの構造に従って4層に分ける。分離した設計はテストの独立性を保証する。
+テストはアーキテクチャの構造に従って3層に分ける。分離した設計はテストの独立性を保証する。
 
 #### 層の定義
 
 | 層 | 対象 | ツール | stage |
 |----|------|--------|-------|
-| ユニットテスト | 関数・クラス単体 | pytest | 1, 2 |
-| コンポーネントテスト | Django / FastAPI 各サービス単体 | pytest + httpx | 1, 2 |
-| E2Eテスト | ブラウザ操作（Django + FastAPI 結合） | Playwright | 1, 2 |
-| 外部仕様テスト | FastAPI の実装が openapi_spec.yaml に準拠しているか | schemathesis | 2 |
+| ユニットテスト | 関数・クラス単体 | pytest | 1 |
+| コンポーネントテスト | Django / FastAPI 各サービス単体 | pytest + httpx | 1 |
+| E2Eテスト | ブラウザ操作（Django + FastAPI 結合） | Playwright | 1 |
 
 ### ユニットテスト
 
@@ -327,66 +319,19 @@ def test_京橋は複数都道府県ヒットする(small_index):
 
 ### コンポーネントテスト（FastAPI）
 
-実CSV（`data/ken_all.csv`, `data/JIGYOSYO.CSV`）を使って実データで検証する。ユニットテストとは明示的に分けて管理する。
-
-代表的なテストケース：
-
-| テストケース | 期待値 | 検証内容 |
-|------------|--------|---------|
-| `神奈川県庁` | `231-8588` | 大口事業所の即答 |
-| `東京大学大学院数理科学研究科` | `153-8914` | 大口事業所・長い名称 |
-| `京橋` | 複数件・複数都道府県 | 地名重複の仕様確認 |
-| `.*` | 件数 < 100 | ReDOS・ワイルドカード制御 |
-| `` （空文字） | 400エラー | 入力バリデーション |
+実CSV（`data/ken_all.csv`）を使って実データで検証する。ユニットテストとは明示的に分けて管理する。
 
 ### E2Eテスト（Playwright）
 
 ブラウザを通じてDjangoとFastAPIの結合を検証する。
 
-```
-シナリオ例（stage 2）：
-1. 出席者登録画面を開く
-2. 住所欄に「横浜市中区」と入力（IME確定）
-3. 候補が表示されることを確認
-4. 候補をクリックして郵便番号欄が補完されることを確認
-```
-
-### 外部仕様テスト（schemathesis）
-
-`openapi_spec.yaml` を仕様書として、FastAPIの実装がその契約に準拠しているかを自動検証する。仕様書を書いた意味をここで完結させる。
-
-```bash
-schemathesis run openapi_spec.yaml --url http://localhost:8001
-```
-
-schemathesisは仕様からテストケースを自動生成する。人間が書いたテストでは見落としがちなエッジケース（型の境界値・必須パラメータ欠落等）を網羅する。
-
 #### テスト実行
 
 ```bash
 make test           # ユニット + インテグレーション
-make test-spec      # スキーマ適合テスト（CSV必要。バックエンドを自動起動して schemathesis を実行）
-make test-e2e       # E2Eテスト・未実装（docker compose up が前提）
+make test-e2e       # E2Eテスト（docker compose up が前提）
 make test-all       # ユニット + インテグレーション + E2E
 ```
-
-#### スキーマ適合テスト（schemathesis）
-
-`docs/openapi_spec.yaml` を契約として、FastAPI 実装がその仕様に準拠しているかを検査する。
-
-```
-make test-spec の動作:
-  1. data/utf_ken_all.csv の存在を確認（なければエラーメッセージで終了）
-  2. バックエンドをポート 8001 で起動（既に起動中なら再利用）
-  3. schemathesis run docs/openapi_spec.yaml --checks all を実行
-  4. 終了時（正常・エラー・Ctrl+C 問わず）バックエンドを停止
-```
-
-schemathesis は仕様書のパラメータ型・必須項目からテストケースを自動生成し、以下を検査する。
-
-- 5xx レスポンスが返らないこと
-- レスポンスのステータスコードが仕様と一致すること
-- レスポンスボディが仕様のスキーマと一致すること
 
 ---
 
@@ -492,4 +437,3 @@ CSVは `backend/data/` ディレクトリにマウントされ、FastAPIが起�
 | stage | 確認内容 |
 |-------|---------|
 | 1 | `docker compose up` 後、ブラウザで差出人登録・順引き補完が動作する |
-| 2 | `make test-all` 全通過 + `docker compose up` 後にE2Eテストが通過する |

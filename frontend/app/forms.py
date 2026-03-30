@@ -2,10 +2,6 @@ from django import forms
 from .models import Sender, Guest
 
 
-class NamesWidget(forms.Textarea):
-    """names（JSON list）を改行区切りテキストとして表示・入力するウィジェット"""
-
-
 class NamesField(forms.CharField):
     widget = forms.Textarea(attrs={"rows": 3, "placeholder": "山田 太郎\n山田 花子"})
 
